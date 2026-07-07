@@ -45,7 +45,6 @@ jobs:
           tagName: 'vlatest'
           releaseName: 'App Latest Build'
           releaseDraft: true
-          draft: true
           prerelease: false
           args: ${{ matrix.args }}
 
@@ -54,7 +53,8 @@ jobs:
         with:
           name: supecard-app-${{ matrix.platform }}-${{ strategy.job-index }}
           path: |
-            src-tauri/target/release/bundle/**/*.msi
-            src-tauri/target/release/bundle/**/*.exe
-            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.exe
+            src-tauri/target/**/release/bundle/**/*.dmg
+
 
