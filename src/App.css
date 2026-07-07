@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans m-0 p-0 antialiased select-none tracking-tight font-medium;
+  }
+}
+
+/* Custom Dotted Background Pattern */
+.bg-dotted-light {
+  background-color: #fafafa;
+  background-image: radial-gradient(#e2e8f0 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+
+.bg-dotted-dark {
+  background-color: #0b0c10;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+
+/* Dark Theme Override Layer */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0b0c10;
+  color: #f1f5f9;
+}
+
+/* Header */
+.dark header {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-color: rgba(51, 65, 85, 0.3) !important;
+}
+
+/* Text */
+.dark .text-slate-800 { color: #f1f5f9 !important; }
+.dark .text-slate-700 { color: #e2e8f0 !important; }
+.dark .text-slate-600 { color: #cbd5e1 !important; }
+.dark .text-slate-500 { color: #94a3b8 !important; }
+.dark .text-slate-400 { color: #64748b !important; }
+
+/* Dotted background */
+.dark .bg-slate-50, .dark .bg-\[\#fafafa\] {
+  background-color: #0b0c10 !important;
+}
+
+/* Course Columns */
+.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+/* Deck Cards */
+.dark .bg-slate-100\/80 {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  border-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+/* Buttons / inputs */
+.dark .bg-slate-100 { background-color: rgba(30, 41, 59, 0.6) !important; }
+.dark .border-slate-200 { border-color: rgba(51, 65, 85, 0.5) !important; }
+.dark .border-slate-100 { border-color: rgba(51, 65, 85, 0.4) !important; }
+.dark .bg-slate-50 { background-color: rgba(15, 23, 42, 0.5) !important; }
+.dark .hover\:bg-slate-50:hover { background-color: rgba(51, 65, 85, 0.4) !important; }
+.dark .hover\:bg-slate-100:hover { background-color: rgba(51, 65, 85, 0.6) !important; }
+.dark .hover\:bg-slate-200:hover { background-color: rgba(71, 85, 105, 0.8) !important; }
+.dark .hover\:bg-slate-200\/40:hover { background-color: rgba(71, 85, 105, 0.4) !important; }
+
+/* Modals & Popups */
+.dark .bg-white\/85 {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+.dark .bg-white\/90 {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+.dark .bg-white {
+  background-color: #0f172a !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Study Card */
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+/* Active Menu trigger hover */
+.dark .hover\:bg-slate-200:hover {
+  background-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Dropdown list dividers */
+.dark .border-slate-100 {
+  border-color: rgba(51, 65, 85, 0.3) !important;
+}
+
+/* Inputs and Selects text */
+.dark input, .dark select, .dark textarea {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(51, 65, 85, 0.6) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark input::placeholder {
+  color: #64748b !important;
+}
+
+/* Dashboard Bottom Action Banner Button */
+.dark .bg-slate-700 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+.dark .hover\:bg-slate-700:hover {
+  background-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+/* Premium shadows & borders for dark mode components */
+.dark .shadow-2xl, .dark .shadow-xl, .dark .shadow-lg, .dark .shadow-md, .dark .shadow-sm {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.85), 0 1px 3px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Better dark mode contrasts and states for slate buttons */
+.dark .bg-slate-200 {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+.dark .hover\:bg-slate-300:hover {
+  background-color: #475569 !important;
+}
+.dark .hover\:bg-slate-800:hover {
+  background-color: rgba(51, 65, 85, 0.9) !important;
+}
+.dark .bg-slate-350, .dark .bg-slate-300 {
+  background-color: #475569 !important;
+}
+.dark .text-slate-700 {
+  color: #f1f5f9 !important;
+}
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Card perspective container for Y-axis flip */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+/* SortableJS Ghost Drag Drop Indicator */
+.deck-sortable-ghost {
+  opacity: 0.8 !important;
+  position: relative !important;
+  border: 1px dashed rgba(249, 115, 22, 0.4) !important;
+  background-color: rgba(249, 115, 22, 0.03) !important;
+}
+
+.deck-sortable-ghost > * {
+  opacity: 0.15 !important;
+}
+
+.deck-sortable-ghost::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -4px !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 4px !important;
+  background-color: #f97316 !important; /* Bright orange line */
+  border-radius: 9999px !important;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.8) !important;
+  z-index: 10 !important;
+}
