@@ -42,9 +42,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: 'SUPECARD v__VERSION__'
-          releaseBody: 'Release automatica generata da GitHub Actions.'
+          tagName: 'vlatest'
+          releaseName: 'App Latest Build'
           releaseDraft: true
+          draft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: supecard-app-${{ matrix.platform }}-${{ strategy.job-index }}
+          path: |
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.dmg
+
