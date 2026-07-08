@@ -1,15 +1,21 @@
 import { useState, useEffect } from "react";
-import { HelpCircle, Download } from "lucide-react";
+import { HelpCircle, Download, Settings, Sliders } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardView } from "./components/DashboardView";
 import { StudyView } from "./components/StudyView";
 import { AboutModal } from "./components/AboutModal";
 import { ImportModal } from "./components/ImportModal";
 import { RipassoView } from "./components/RipassoView";
+import { SettingsModal } from "./components/SettingsModal";
 import { api } from "./api";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<"dashboard" | "study" | "ripasso">("dashboard");
+  const [lastScreen, setLastScreen] = useState<"dashboard" | "study" | "ripasso" | null>(null);
+
+  useEffect(() => {
+    setLastScreen(currentScreen);
+  }, [currentScreen]);
   const [studyParams, setStudyParams] = useState<{
     deckId: number;
     deckName: string;
@@ -21,6 +27,7 @@ function App() {
 
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
   const [ripassoLimit, setRipassoLimit] = useState(3);
   const [selectedLimit, setSelectedLimit] = useState(3);
@@ -30,20 +37,37 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    return (localStorage.getItem("supecard-theme") as "light" | "dark") || "light";
+  const [themeSetting, setThemeSetting] = useState<"light" | "dark" | "system">(() => {
+    return (localStorage.getItem("supecard-theme-setting") as "light" | "dark" | "system") || "system";
   });
 
-  // Apply Theme class and store in localStorage
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  const theme = themeSetting === "system" ? (systemDark ? "dark" : "light") : themeSetting;
+
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("supecard-theme", "dark");
     } else {
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("supecard-theme", "light");
     }
-  }, [theme]);
+    localStorage.setItem("supecard-theme-setting", themeSetting);
+  }, [theme, themeSetting]);
+
+  const [language, setLanguage] = useState<"it" | "en">(() => {
+    return (localStorage.getItem("supecard-language") as "it" | "en") || "it";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("supecard-language", language);
+  }, [language]);
 
   // Load Ripasso Success Limit on mount
   useEffect(() => {
@@ -193,43 +217,20 @@ function App() {
             <div className="flex items-center gap-4">
               {currentScreen !== "study" && (
                 <>
-                  {/* Theme Toggle Button */}
-                  <button
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                    className="px-4 py-2 border border-slate-200 text-slate-500 hover:text-orange-500 font-extrabold text-xs uppercase tracking-tight rounded-xl transition-colors flex items-center gap-1.5 bg-white/50 backdrop-blur-sm shrink-0 cursor-pointer"
-                    title={theme === "light" ? "Attiva Tema Scuro" : "Attiva Tema Chiaro"}
-                  >
-                    {theme === "light" ? (
-                      <>
-                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                          <path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.991z"/>
-                        </svg>
-                        SCURO
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="5"></circle>
-                          <line x1="12" y1="1" x2="12" y2="3"></line>
-                          <line x1="12" y1="21" x2="12" y2="23"></line>
-                          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                          <line x1="1" y1="12" x2="3" y2="12"></line>
-                          <line x1="21" y1="12" x2="23" y2="12"></line>
-                          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        CHIARO
-                      </>
-                    )}
-                  </button>
-
                   {/* ABOUT Button */}
                   <button
                     onClick={() => setIsAboutOpen(true)}
-                    className="px-4 py-2 border border-slate-200 text-slate-500 hover:text-orange-500 font-extrabold text-xs uppercase tracking-tight rounded-xl transition-colors flex items-center gap-1.5 bg-white/50 backdrop-blur-sm shrink-0"
+                    className="px-4 h-9 border border-slate-200 text-slate-500 hover:text-orange-500 font-extrabold text-xs uppercase tracking-tight rounded-xl transition-colors flex items-center gap-1.5 bg-white/50 backdrop-blur-sm shrink-0 cursor-pointer"
                   >
                     <HelpCircle size={14} /> ABOUT
+                  </button>
+
+                  {/* Settings Button */}
+                  <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="px-4 h-9 border border-slate-200 text-slate-500 hover:text-orange-500 font-extrabold text-xs uppercase tracking-tight rounded-xl transition-colors flex items-center gap-1.5 bg-white/50 backdrop-blur-sm shrink-0 cursor-pointer"
+                  >
+                    <Settings size={14} /> Impostazioni
                   </button>
                 </>
               )}
@@ -237,7 +238,7 @@ function App() {
               {currentScreen === "dashboard" && (
                 <button
                   onClick={triggerImportCsv}
-                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-md shadow-orange-500/10 hover:shadow-orange-500/25 transition-all flex items-center gap-1.5 shrink-0"
+                  className="w-[145px] h-9 justify-center bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-md shadow-orange-500/10 hover:shadow-orange-500/25 transition-all flex items-center gap-1.5 shrink-0"
                 >
                   <Download size={14} /> Importa CSV
                 </button>
@@ -249,41 +250,79 @@ function App() {
                     setSelectedLimit(ripassoLimit);
                     setIsDiffModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-md shadow-slate-700/10 hover:shadow-slate-700/25 transition-all flex items-center gap-1.5 shrink-0"
+                  className="w-[145px] h-9 justify-center bg-slate-700 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tighter rounded-xl shadow-md shadow-slate-700/10 hover:shadow-slate-700/25 transition-all flex items-center gap-1.5 shrink-0"
                 >
-                  Difficoltà ({ripassoLimit}x)
+                  <Sliders size={14} /> Difficoltà {ripassoLimit}
                 </button>
               )}
             </div>
           </header>
 
-          {currentScreen === "dashboard" ? (
-            <DashboardView
-              key={refreshKey}
-              onStudyDeck={handleStudyDeck}
-              onOpenImport={triggerImportCsv}
-              onNavigateToRipasso={() => setCurrentScreen("ripasso")}
-              totalRipassoCount={totalRipassoCount}
-            />
-          ) : currentScreen === "ripasso" ? (
-            <RipassoView
-              ripassoLimit={ripassoLimit}
-              onBack={handleBackToDashboard}
-              onStudyDeck={handleStudyDeck}
-            />
-          ) : (
-            studyParams && (
-              <StudyView
-                deckId={studyParams.deckId}
-                deckName={studyParams.deckName}
-                inStudiamento={studyParams.inStudiamento}
-                courseId={studyParams.courseId}
-                targetDeckId={studyParams.targetDeckId}
-                ripassoLimit={ripassoLimit}
-                onBack={handleBackToDashboard}
-              />
-            )
-          )}
+          <AnimatePresence mode="popLayout">
+            {currentScreen === "dashboard" && (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, y: lastScreen === "study" ? 0 : 100, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ 
+                  opacity: 0, 
+                  y: (currentScreen as string) === "ripasso" ? 100 : 0, 
+                  filter: "blur(8px)" 
+                }}
+                transition={{ 
+                  duration: ((currentScreen as string) === "study" || lastScreen === "study") ? 0.35 : 0.75, 
+                  ease: [0.16, 1, 0.3, 1] 
+                }}
+                className="w-full flex-1 flex flex-col"
+              >
+                <DashboardView
+                  key={refreshKey}
+                  onStudyDeck={handleStudyDeck}
+                  onOpenImport={triggerImportCsv}
+                  onNavigateToRipasso={() => setCurrentScreen("ripasso")}
+                  totalRipassoCount={totalRipassoCount}
+                />
+              </motion.div>
+            )}
+
+            {currentScreen === "ripasso" && (
+              <motion.div
+                key="ripasso"
+                initial={{ opacity: 0, y: -100, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -100, filter: "blur(6px)" }}
+                transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full flex-1 flex flex-col z-10"
+              >
+                <RipassoView
+                  ripassoLimit={ripassoLimit}
+                  onBack={handleBackToDashboard}
+                  onStudyDeck={handleStudyDeck}
+                />
+              </motion.div>
+            )}
+
+            {currentScreen === "study" && studyParams && (
+              <motion.div
+                key="study"
+                initial={{ opacity: 0, filter: "blur(12px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(12px)" }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full flex-1 flex flex-col"
+              >
+                <StudyView
+                  deckId={studyParams.deckId}
+                  deckName={studyParams.deckName}
+                  inStudiamento={studyParams.inStudiamento}
+                  courseId={studyParams.courseId}
+                  targetDeckId={studyParams.targetDeckId}
+                  ripassoLimit={ripassoLimit}
+                  onBack={handleBackToDashboard}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* About Modal */}
           <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
@@ -294,6 +333,16 @@ function App() {
             initialCsvPath={importCsvPath}
             onClose={() => setIsImportOpen(false)}
             onSuccess={handleImportSuccess}
+          />
+
+          {/* Settings Modal */}
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            themeSetting={themeSetting}
+            setThemeSetting={setThemeSetting}
+            language={language}
+            setLanguage={setLanguage}
           />
 
           {/* Difficulty Modal */}

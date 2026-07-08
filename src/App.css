@@ -16,8 +16,8 @@
 }
 
 .bg-dotted-dark {
-  background-color: #0b0c10;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 0.8px, transparent 0.8px);
+  background-color: #12131a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .dark body {
-  background-color: #0b0c10;
+  background-color: #12131a;
   color: #f1f5f9;
 }
 
@@ -46,7 +46,7 @@
 
 /* Dotted background */
 .dark .bg-slate-50, .dark .bg-\[\#fafafa\] {
-  background-color: #0b0c10 !important;
+  background-color: #12131a !important;
 }
 
 /* Course Columns */
@@ -220,4 +220,28 @@
   border-radius: 9999px !important;
   box-shadow: 0 0 6px rgba(249, 115, 22, 0.8) !important;
   z-index: 10 !important;
+}
+
+/* Custom dark mode fixes for settings, about, imports, and ripasso button */
+.dark .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.dark header button.border-slate-200 {
+  color: #e2e8f0 !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+.dark header button.border-slate-200:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f97316 !important;
+  border-color: rgba(249, 115, 22, 0.5) !important;
+}
+.dark .bg-white\/30 {
+  background-color: rgba(30, 41, 59, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .ripasso-banner-btn {
+  background-color: #334155 !important;
+}
+.dark .ripasso-banner-btn:hover {
+  background-color: #475569 !important;
 }

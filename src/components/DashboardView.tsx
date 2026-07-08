@@ -161,10 +161,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   const handleDeleteCourse = (courseId: number, courseNome: string) => {
-    if (courseNome === "Generale") {
-      setCustomAlertMessage("Non è possibile eliminare il corso di default 'Generale'.");
-      return;
-    }
     setDeleteCourseId(courseId);
     setDeleteCourseName(courseNome);
   };
@@ -261,7 +257,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="w-full">
           <button
             onClick={onNavigateToRipasso}
-            className="w-full px-6 py-4 bg-slate-700 hover:bg-slate-800 text-white flex justify-between items-center transition-all group shadow-md shadow-slate-200/40 cursor-pointer"
+            className="ripasso-banner-btn w-full px-6 py-4 bg-slate-700 hover:bg-slate-800 text-white flex justify-between items-center transition-all group shadow-md shadow-slate-200/40 cursor-pointer"
           >
             <span className="font-black text-sm tracking-tight uppercase">
               ENTRA NELL'AREA RIPASSO
@@ -304,74 +300,70 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
                     
                     <div className="flex items-center gap-2 relative">
-                      {course.nome !== "Generale" && (
-                        <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (activeMenuCourseId === course.id) {
+                            setActiveMenuCourseId(null);
+                          } else {
+                            setActiveMenuCourseId(course.id);
+                            setActiveMenuDeckId(null);
+                          }
+                        }}
+                        className="menu-trigger-button p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+                        title="Opzioni corso"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+
+                      {activeMenuCourseId === course.id && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="menu-dropdown-container absolute right-0 top-full mt-2.5 w-36 bg-white/90 border border-slate-200/50 rounded-xl shadow-xl z-40 overflow-hidden backdrop-blur-md"
+                        >
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (activeMenuCourseId === course.id) {
-                                setActiveMenuCourseId(null);
-                              } else {
-                                setActiveMenuCourseId(course.id);
-                                setActiveMenuDeckId(null);
-                              }
+                              setActiveMenuCourseId(null);
+                              handleMoveCourseLeft(course.id);
                             }}
-                            className="menu-trigger-button p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
-                            title="Opzioni corso"
+                            disabled={cIdx === 0}
+                            className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-20 disabled:pointer-events-none"
                           >
-                            <MoreVertical size={16} />
+                            Sposta a sinistra
                           </button>
-
-                          {activeMenuCourseId === course.id && (
-                            <div
-                              onClick={(e) => e.stopPropagation()}
-                              className="menu-dropdown-container absolute right-0 mt-1 w-36 bg-white/90 border border-slate-200/50 rounded-xl shadow-xl z-40 overflow-hidden backdrop-blur-md"
-                            >
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuCourseId(null);
-                                  handleMoveCourseLeft(course.id);
-                                }}
-                                disabled={cIdx <= 1}
-                                className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-20 disabled:pointer-events-none"
-                              >
-                                Sposta a sinistra
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuCourseId(null);
-                                  handleMoveCourseRight(course.id);
-                                }}
-                                disabled={cIdx === courses.length - 1}
-                                className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100 disabled:opacity-20 disabled:pointer-events-none"
-                              >
-                                Sposta a destra
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuCourseId(null);
-                                  handleRenameCourse(course.id, course.nome);
-                                }}
-                                className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
-                              >
-                                Rinomina Corso
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuCourseId(null);
-                                  handleDeleteCourse(course.id, course.nome);
-                                }}
-                                className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-500 hover:bg-slate-50 transition-colors border-t border-slate-105"
-                              >
-                                Elimina Corso
-                              </button>
-                            </div>
-                          )}
-                        </>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuCourseId(null);
+                              handleMoveCourseRight(course.id);
+                            }}
+                            disabled={cIdx === courses.length - 1}
+                            className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100 disabled:opacity-20 disabled:pointer-events-none"
+                          >
+                            Sposta a destra
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuCourseId(null);
+                              handleRenameCourse(course.id, course.nome);
+                            }}
+                            className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                          >
+                            Rinomina Corso
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuCourseId(null);
+                              handleDeleteCourse(course.id, course.nome);
+                            }}
+                            className="w-full text-left px-3 py-2 text-[10px] font-extrabold tracking-tight text-slate-500 hover:bg-slate-50 transition-colors border-t border-slate-105"
+                          >
+                            Elimina Corso
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -487,7 +479,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           </div>
 
                           {/* Deck Progress Info */}
-                          <div className="flex justify-between items-center pt-1 border-t border-slate-100/50">
+                          <div className="flex justify-between items-center mt-1">
                             {/* In Ripasso Apple Switch */}
                             <div className="flex items-center gap-1.5">
                               <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-tight">

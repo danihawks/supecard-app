@@ -96,7 +96,7 @@ export const RipassoView: React.FC<RipassoViewProps> = ({
             onClick={onBack}
             className="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-tight rounded-full shadow-md transition-all active:scale-95 flex items-center gap-1.5"
           >
-            ← TORNA ALLA HOME
+            ↓ TORNA ALLA HOME
           </button>
         </div>
 
