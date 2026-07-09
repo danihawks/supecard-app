@@ -39,7 +39,8 @@ pub fn run() {
             commands::rename_deck,
             commands::rename_course,
             commands::reorder_courses,
-            commands::reorder_decks
+            commands::reorder_decks,
+            commands::update_flashcard_content
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

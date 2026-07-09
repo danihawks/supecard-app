@@ -245,3 +245,29 @@
 .dark .ripasso-banner-btn:hover {
   background-color: #475569 !important;
 }
+
+/* Custom edit mode striped background */
+.bg-edit-mode {
+  background-color: #ffffff !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #ffffff,
+    #ffffff 15px,
+    #fff7ed 15px,
+    #fff7ed 30px
+  ) !important;
+}
+
+.dark .bg-edit-mode {
+  background-color: #0b0c10 !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #0b0c10,
+    #0b0c10 15px,
+    #2c1a11 15px,
+    #2c1a11 30px
+  ) !important;
+}
+
+
+

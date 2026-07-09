@@ -49,6 +49,8 @@ export const api = {
     invoke("update_ripasso_progress", { id, successi, inList }),
   setCardArchiveStatus: (id: number, archived: boolean): Promise<void> =>
     invoke("set_card_archive_status", { id, archived }),
+  updateFlashcardContent: (id: number, domanda: string, risposta: string): Promise<void> =>
+    invoke("update_flashcard_content", { id, domanda, risposta }),
   
   getStudiamentoCards: (courseId?: number | null): Promise<Flashcard[]> =>
     invoke("get_studiamento_cards", { courseId: courseId ?? null }),

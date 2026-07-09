@@ -36,6 +36,9 @@ function App() {
   const [importCsvPath, setImportCsvPath] = useState("");
   const [showSplash, setShowSplash] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEditingCard, setIsEditingCard] = useState(false);
+  const [onSaveEditCallback, setOnSaveEditCallback] = useState<(() => void) | null>(null);
+  const [onCancelEditCallback, setOnCancelEditCallback] = useState<(() => void) | null>(null);
 
   const [themeSetting, setThemeSetting] = useState<"light" | "dark" | "system">(() => {
     return (localStorage.getItem("supecard-theme-setting") as "light" | "dark" | "system") || "system";
@@ -198,19 +201,42 @@ function App() {
           }}
           className={`min-h-screen w-full flex flex-col bg-[#fafafa] text-slate-800 ${theme === "dark" ? "bg-dotted-dark" : "bg-dotted-light"} overflow-x-hidden`}
         >
-          {/* Top Global Header */}
-          <header className="sticky top-0 z-50 px-6 py-4 flex justify-between items-center bg-white/70 border-b border-slate-200/50 backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              <span className="text-3xl font-black text-slate-700 tracking-tighter">SUPECARD</span>
-              {currentScreen === "ripasso" && (
-                <span className="text-sm font-bold text-slate-400 tracking-tight ml-2">/ area ripasso</span>
-              )}
-              {currentScreen === "study" && studyParams && (
-                <span className="text-sm text-slate-400 tracking-tight ml-2 flex items-center gap-1">
-                  / <span className="italic font-medium">{studyParams.courseName || "Corso"}</span>
-                  <span className="text-slate-300">/</span>
-                  <span className="font-bold text-slate-700">{studyParams.deckName.replace("Area Ripasso - ", "")}</span>
-                </span>
+          <header className={`sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b transition-all duration-300 backdrop-blur-md ${
+            isEditingCard 
+              ? "bg-white/80 border-orange-200 text-slate-800" 
+              : "bg-white/70 border-slate-200/50 text-slate-800"
+          }`}>
+            <div className="flex items-center gap-3">
+              {isEditingCard ? (
+                <>
+                  <button
+                    onClick={() => onSaveEditCallback?.()}
+                    className="px-4 h-9 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-md shadow-orange-500/20 hover:shadow-orange-500/40 transition-all flex items-center justify-center cursor-pointer"
+                  >
+                    TERMINA MODIFICA
+                  </button>
+                  <button
+                    onClick={() => onCancelEditCallback?.()}
+                    className="w-9 h-9 border border-slate-200 hover:bg-slate-100 active:scale-95 text-slate-500 hover:text-orange-500 font-extrabold text-sm rounded-xl transition-all flex items-center justify-center bg-white/50 backdrop-blur-sm shrink-0 cursor-pointer"
+                    title="Annulla Modifiche"
+                  >
+                    X
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-black text-slate-700 tracking-tighter">SUPECARD</span>
+                  {currentScreen === "ripasso" && (
+                    <span className="text-sm font-bold text-slate-400 tracking-tight ml-2">/ area ripasso</span>
+                  )}
+                  {currentScreen === "study" && studyParams && (
+                    <span className="text-sm text-slate-400 tracking-tight ml-2 flex items-center gap-1">
+                      / <span className="italic font-medium">{studyParams.courseName || "Corso"}</span>
+                      <span className="text-slate-300">/</span>
+                      <span className="font-bold text-slate-700">{studyParams.deckName.replace("Area Ripasso - ", "")}</span>
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
@@ -319,6 +345,10 @@ function App() {
                   targetDeckId={studyParams.targetDeckId}
                   ripassoLimit={ripassoLimit}
                   onBack={handleBackToDashboard}
+                  onStartEditing={() => setIsEditingCard(true)}
+                  onStopEditing={() => setIsEditingCard(false)}
+                  registerSaveCallback={(cb) => setOnSaveEditCallback(() => cb)}
+                  registerCancelCallback={(cb) => setOnCancelEditCallback(() => cb)}
                 />
               </motion.div>
             )}

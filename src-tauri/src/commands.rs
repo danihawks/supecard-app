@@ -496,3 +496,30 @@ pub fn reorder_decks(state: State<'_, DbState>, ids: Vec<i64>, course_id: i64) -
     Ok(())
 }
 
+#[tauri::command]
+pub fn update_flashcard_content(
+    state: State<'_, DbState>,
+    id: i64,
+    domanda: String,
+    risposta: String,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    let domanda_trimmed = domanda.trim();
+    let risposta_trimmed = risposta.trim();
+
+    if domanda_trimmed.is_empty() {
+        return Err("La domanda non può essere vuota.".to_string());
+    }
+    if risposta_trimmed.is_empty() {
+        return Err("La risposta non può essere vuota.".to_string());
+    }
+
+    conn.execute(
+        "UPDATE flashcards SET domanda = ?, risposta = ? WHERE id = ?;",
+        params![domanda_trimmed, risposta_trimmed, id],
+    ).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+

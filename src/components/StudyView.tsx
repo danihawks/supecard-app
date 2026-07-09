@@ -11,6 +11,10 @@ interface StudyViewProps {
   targetDeckId?: number; // optional deck ID for deck-specific ripasso
   ripassoLimit: number;
   onBack: () => void;
+  onStartEditing?: () => void;
+  onStopEditing?: () => void;
+  registerSaveCallback?: (cb: () => void) => void;
+  registerCancelCallback?: (cb: () => void) => void;
 }
 
 const cardVariants: Variants = {
@@ -77,7 +81,11 @@ export const StudyView: React.FC<StudyViewProps> = ({
   courseId,
   targetDeckId,
   ripassoLimit,
-  onBack
+  onBack,
+  onStartEditing,
+  onStopEditing,
+  registerSaveCallback,
+  registerCancelCallback
 }) => {
   const [activeCards, setActiveCards] = useState<Flashcard[]>([]);
   const [totalCardsCount, setTotalCardsCount] = useState(0);
@@ -85,6 +93,16 @@ export const StudyView: React.FC<StudyViewProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [exitCustom, setExitCustom] = useState<{ type: string; x?: number; y?: number }>({ type: "default" });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Edit Mode States
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDomanda, setEditDomanda] = useState("");
+  const [editRisposta, setEditRisposta] = useState("");
+  const [editShowingAnswer, setEditShowingAnswer] = useState(false);
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+
+  const currentCard = activeCards.length > 0 ? activeCards[0] : null;
 
   // Initialize session
   useEffect(() => {
@@ -119,7 +137,65 @@ export const StudyView: React.FC<StudyViewProps> = ({
     }
   };
 
-  const currentCard = activeCards.length > 0 ? activeCards[0] : null;
+  const handleStartEditing = () => {
+    if (!currentCard) return;
+    setEditDomanda(currentCard.domanda);
+    setEditRisposta(currentCard.risposta);
+    setEditShowingAnswer(false);
+    setIsEditing(true);
+    onStartEditing?.();
+  };
+
+  const handleStopEditing = () => {
+    setIsEditing(false);
+    onStopEditing?.();
+  };
+
+  const handleSaveEdit = async () => {
+    if (!currentCard) return;
+    try {
+      await api.updateFlashcardContent(currentCard.id, editDomanda, editRisposta);
+      
+      const updated = activeCards.map((c) => {
+        if (c.id === currentCard.id) {
+          return {
+            ...c,
+            domanda: editDomanda.trim(),
+            risposta: editRisposta.trim()
+          };
+        }
+        return c;
+      });
+      
+      setActiveCards(updated);
+      setShowSaveConfirmModal(false);
+      handleStopEditing();
+    } catch (e) {
+      console.error(e);
+      alert("Impossibile salvare la modifica: " + e);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowCancelConfirmModal(true);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelConfirmModal(false);
+    handleStopEditing();
+  };
+
+  useEffect(() => {
+    if (isEditing) {
+      registerSaveCallback?.(() => {
+        setShowSaveConfirmModal(true);
+      });
+      registerCancelCallback?.(() => {
+        handleCancelEdit();
+      });
+    }
+  }, [isEditing, editDomanda, editRisposta, activeCards, currentCard]);
+
 
   const handleCardFlip = () => {
     if (activeCards.length === 0) return;
@@ -250,21 +326,92 @@ export const StudyView: React.FC<StudyViewProps> = ({
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col w-full">
+    <div className={`h-[calc(100vh-4rem)] overflow-hidden flex flex-col w-full transition-colors duration-300 ${
+      isEditing ? "bg-edit-mode" : ""
+    }`}>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4 justify-between items-stretch overflow-hidden">
         {/* Navigation capsule button */}
-        <div className="w-full flex items-center mb-4 shrink-0">
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-tight rounded-full shadow-md transition-all active:scale-95 flex items-center gap-1.5"
-          >
-            ← TORNA ALLA HOME
-          </button>
-        </div>
+        {!isEditing && (
+          <div className="w-full flex items-center mb-4 shrink-0">
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-tight rounded-full shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              ← TORNA ALLA HOME
+            </button>
+          </div>
+        )}
 
-        {activeCards.length === 0 ? (
+        {isEditing ? (
+          /* Edit Deck screen */
+          <div className="flex-1 flex flex-col items-center justify-between min-h-0 w-full">
+            {/* Spacer to push card down a bit */}
+            <div className="w-full h-4 shrink-0" />
+
+            {/* Flashcard Container for Edit Mode */}
+            <div className="w-full max-w-[480px] sm:max-w-[640px] md:max-w-[800px] h-[240px] sm:h-[320px] md:h-[400px] perspective-1000 relative flex-1 min-h-0">
+              <div
+                className={`relative w-full h-full transform-style-3d transition-transform duration-500 ${
+                  editShowingAnswer ? "rotate-y-180" : ""
+                }`}
+              >
+                {/* CARD FRONT (MODIFICA DOMANDA) */}
+                <div
+                  className="absolute inset-0 backface-hidden flex flex-col p-6 rounded-2xl shadow-xl border bg-white border-orange-200/80"
+                >
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                    <span className="text-xl sm:text-2xl font-black text-orange-500 tracking-tight uppercase">
+                      modifica domanda
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <textarea
+                      value={editDomanda}
+                      onChange={(e) => setEditDomanda(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 w-full bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl p-4 text-slate-800 text-base sm:text-lg md:text-xl font-medium leading-relaxed resize-none outline-none transition-colors"
+                      placeholder="Scrivi la domanda..."
+                    />
+                  </div>
+                </div>
+
+                {/* CARD BACK (MODIFICA RISPOSTA) */}
+                <div
+                  className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col p-6 rounded-2xl shadow-xl border bg-white border-orange-200/80"
+                >
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                    <span className="text-xl sm:text-2xl font-black text-orange-500 tracking-tight uppercase">
+                      modifica risposta
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <textarea
+                      value={editRisposta}
+                      onChange={(e) => setEditRisposta(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 w-full bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl p-4 text-slate-800 text-base sm:text-lg md:text-xl font-medium leading-relaxed resize-none outline-none transition-colors"
+                      placeholder="Scrivi la risposta..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="w-full max-w-[480px] sm:max-w-[640px] md:max-w-[800px] flex gap-4 mt-6 h-12 shrink-0">
+              <button
+                type="button"
+                onClick={() => setEditShowingAnswer(!editShowingAnswer)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-extrabold text-xs uppercase tracking-tight rounded-full shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw size={14} /> GIRA
+              </button>
+            </div>
+          </div>
+        ) : (
+          activeCards.length === 0 ? (
           /* End Screen */
           <div className="flex-1 flex flex-col items-center justify-center min-h-0 overflow-y-auto">
             <motion.div
@@ -356,21 +503,37 @@ export const StudyView: React.FC<StudyViewProps> = ({
                               [Archiviata - Riserva]
                             </span>
                           )}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation(); // prevent flipping card
-                              handleArchiveToggle();
-                            }}
-                            className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-full transition-colors flex items-center gap-1 ${
-                              currentCard.archiviato === 1
-                                ? "bg-orange-500 text-white hover:bg-orange-600"
-                                : "bg-slate-100 hover:bg-slate-200 text-slate-500"
-                            }`}
-                          >
-                            <Archive size={10} />
-                            {currentCard.archiviato === 1 ? "ripristina" : "archivia"}
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent flipping card
+                                handleArchiveToggle();
+                              }}
+                              className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-full transition-colors flex items-center gap-1 ${
+                                currentCard.archiviato === 1
+                                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-500"
+                              }`}
+                            >
+                              <Archive size={10} />
+                              {currentCard.archiviato === 1 ? "ripristina" : "archivia"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent flipping card
+                                handleStartEditing();
+                              }}
+                              className="w-6.5 h-6.5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 rounded-full transition-all active:scale-90"
+                              title="Modifica Flashcard"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         <div className="flex-1 flex items-center justify-center text-center min-h-0">
                           <p
@@ -410,21 +573,37 @@ export const StudyView: React.FC<StudyViewProps> = ({
                               [Archiviata - Riserva]
                             </span>
                           )}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation(); // prevent flipping card
-                              handleArchiveToggle();
-                            }}
-                            className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-full transition-colors flex items-center gap-1 ${
-                              currentCard.archiviato === 1
-                                ? "bg-orange-500 text-white hover:bg-orange-600"
-                                : "bg-slate-100 hover:bg-slate-200 text-slate-500"
-                            }`}
-                          >
-                            <Archive size={10} />
-                            {currentCard.archiviato === 1 ? "ripristina" : "archivia"}
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent flipping card
+                                handleArchiveToggle();
+                              }}
+                              className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-full transition-colors flex items-center gap-1 ${
+                                currentCard.archiviato === 1
+                                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-500"
+                              }`}
+                            >
+                              <Archive size={10} />
+                              {currentCard.archiviato === 1 ? "ripristina" : "archivia"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent flipping card
+                                handleStartEditing();
+                              }}
+                              className="w-6.5 h-6.5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 rounded-full transition-all active:scale-90"
+                              title="Modifica Flashcard"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         <div className="flex-1 flex items-center justify-center text-center min-h-0">
                           <p
@@ -489,7 +668,8 @@ export const StudyView: React.FC<StudyViewProps> = ({
               )}
             </div>
           </div>
-        )}
+        )
+      )}
       </main>
 
       {/* Exit Confirmation Modal */}
@@ -529,6 +709,88 @@ export const StudyView: React.FC<StudyViewProps> = ({
                 <button
                   onClick={() => setShowConfirmModal(false)}
                   className="flex-1 py-2 text-xs font-extrabold uppercase tracking-tight rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 transition-all active:scale-95"
+                >
+                  Annulla
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Save Confirmation Modal */}
+      <AnimatePresence>
+        {showSaveConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSaveConfirmModal(false)}
+              className="absolute inset-0 bg-slate-955/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative z-50 w-full max-w-sm bg-white border border-slate-200/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 text-center text-slate-800"
+            >
+              <h3 className="font-black text-base text-slate-800 tracking-tight mb-2">Salva Modifiche</h3>
+              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                Vuoi salvare le modifiche apportate a questa flashcard?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex-1 py-2 text-xs font-extrabold uppercase tracking-tight rounded-xl bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/10 transition-all active:scale-95 cursor-pointer"
+                >
+                  Salva
+                </button>
+                <button
+                  onClick={() => setShowSaveConfirmModal(false)}
+                  className="flex-1 py-2 text-xs font-extrabold uppercase tracking-tight rounded-xl bg-slate-100 hover:bg-slate-250 text-slate-600 transition-all active:scale-95 cursor-pointer"
+                >
+                  Annulla
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Confirmation Modal */}
+      <AnimatePresence>
+        {showCancelConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCancelConfirmModal(false)}
+              className="absolute inset-0 bg-slate-955/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative z-50 w-full max-w-sm bg-white border border-slate-200/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 text-center text-slate-800"
+            >
+              <h3 className="font-black text-base text-slate-800 tracking-tight mb-2">Annulla Modifiche</h3>
+              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                Sei sicuro di voler uscire? Tutte le modifiche non salvate andranno perdute.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelConfirm}
+                  className="flex-1 py-2 text-xs font-extrabold uppercase tracking-tight rounded-xl bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/10 transition-all active:scale-95 cursor-pointer"
+                >
+                  Conferma
+                </button>
+                <button
+                  onClick={() => setShowCancelConfirmModal(false)}
+                  className="flex-1 py-2 text-xs font-extrabold uppercase tracking-tight rounded-xl bg-slate-100 hover:bg-slate-250 text-slate-600 transition-all active:scale-95 cursor-pointer"
                 >
                   Annulla
                 </button>
